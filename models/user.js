@@ -24,14 +24,8 @@ const user = new mongoose.Schema({
         type: String,
         required: true
     },
-    followers: {
-        type: Number,
-        default: 0
-    },
-    following: {
-        type: Number,
-        default: 0
-    },
+    follower_list: [String],
+    following_list: [String],
     user_post: [post]
 });
 

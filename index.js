@@ -5,6 +5,7 @@ const cors = require('cors');
 const database = require('./database_connect');
 const authentication = require('./routes/authentication');
 const user = require('./routes/user');
+const post = require('./routes/post');
 //Database Connection with mongoDB
 database.on('error', err => console.error(err));
 database.once('open', () => console.log("Connected to the database succesfully"));
@@ -24,6 +25,7 @@ app.use(function(req, res, next) {
 //Routes
 app.use('/api', authentication);
 app.use('/api', user);
+app.use('/api', post);
 
 
 
