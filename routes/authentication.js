@@ -44,34 +44,29 @@ router.post('/authenticate', async(req, res) => {
     try {
         const { email, password } = req.body;
 
-        try {
-            const { email, password } = req.body;
 
-
-            const user = await User.findOne({ email: email })
-                //check if user exists
-            if (user === null) {
-                return res.status(401).send("Email or Password Incorrect");
-            }
-            //check if password is same
-            const validPassword = await bcryptjs.compare(password, user.password);
-
-            if (!validPassword) {
-                return res.status(401).send("Email or Password Incorrect");
-            }
-            //grant the token
-
-            const token = jwtGenerator(user._id);
-            // console.log(token);
-
-            return res.json({ token });
-
-
-
-
-        } catch (err) {
-            return res.set(401).send(err.message);
+        const user = await User.findOne({ email: email })
+            //check if user exists
+        if (user === null) {
+            return res.status(401).send("Email or Password Incorrect");
         }
+        //check if password is same
+        const validPassword = await bcryptjs.compare(password, user.password);
+
+        if (!validPassword) {
+            return res.status(401).send("Email or Password Incorrect");
+        }
+        //grant the token
+
+        const token = jwtGenerator(user._id);
+        // console.log(token);
+
+        return res.json({ token });
+
+
+
+
+
 
     } catch (err) {
         return res.status(500).send(err.message);
