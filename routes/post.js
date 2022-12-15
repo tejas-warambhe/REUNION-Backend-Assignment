@@ -5,12 +5,15 @@ const User = require('../models/user');
 const Post = require('../models/post');
 const UserComment = require('../models/comment');
 const { default: mongoose } = require('mongoose');
+const { populate } = require('../models/user');
 
 
 router.post('/posts', authorize, async(req, res) => {
     try {
         const { title, description } = req.body;
-
+        if (!title || !description) {
+            return res.status(401).send("Insufficient Data");
+        }
         const currentUser = await User.findOne({ _id: req.user.id });
 
         const newPost = new Post({
@@ -40,7 +43,9 @@ router.post('/posts', authorize, async(req, res) => {
 router.delete('/posts/:id', authorize, async(req, res) => {
     try {
         const { id } = req.params;
-
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(401).send("Incorrect ID")
+        }
         const currentUser = await User.findOne({ _id: req.user.id });
         const hasPosted = 0;
         currentUser.user_post.forEach((element) => {
@@ -70,7 +75,9 @@ router.delete('/posts/:id', authorize, async(req, res) => {
 router.post('/like/:id', authorize, async(req, res) => {
     try {
         const { id } = req.params;
-
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(401).send("Incorrect ID")
+        }
         const currentPost = await Post.findOne({ _id: id });
         let hasLiked = 0;
         currentPost.likes.forEach((element) => {
@@ -94,7 +101,9 @@ router.post('/like/:id', authorize, async(req, res) => {
 router.post('/unlike/:id', authorize, async(req, res) => {
     try {
         const { id } = req.params;
-
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(401).send("Incorrect ID")
+        }
         const currentPost = await Post.findOne({ _id: id });
 
         let hasLiked = 0;
@@ -122,6 +131,9 @@ router.post('/comment/:id', authorize, async(req, res) => {
     try {
         const { id } = req.params;
         const { Comment } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(401).send("Incorrect ID")
+        }
         const currentPost = await Post.findOne({ _id: id });
         if (currentPost) {
             const newComment = new UserComment({
@@ -130,6 +142,10 @@ router.post('/comment/:id', authorize, async(req, res) => {
             const addComment = await newComment.save();
 
             currentPost.comments.push(addComment._id);
+            await currentPost.save();
+            return res.status(201).json({
+                comment_id: newComment._id,
+            })
         }
 
         return res.status(401).send("Post does not exist");
@@ -145,10 +161,20 @@ router.get('/posts/:id', async(req, res) => {
     try {
         const { id } = req.params;
 
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(401).send("Incorrect ID")
+        }
+
         const getPost = await Post.findOne({ _id: id }).populate('comments');
 
         if (getPost) {
-            return res.status(201).json({ getPost });
+            return res.status(201).json({
+                post_id: getPost._id,
+                title: getPost.title,
+                description: getPost.desc,
+                likes: getPost.likes.length,
+                comments: getPost.comments
+            });
         }
 
         return res.status(401).send("No post found");
@@ -159,19 +185,26 @@ router.get('/posts/:id', async(req, res) => {
 });
 
 
-router.get('/all_posts/:id', async(req, res) => {
+router.get('/all_posts', authorize, async(req, res) => {
     try {
-        const { id } = req.params;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(401).send("Incorrect ID")
-        }
+        let allPosts = await User.find({ _id: req.user.id }).populate({
+            path: 'user_post',
+            model: 'user_post',
+            populate: {
+                path: 'comments',
+                model: 'user_comment',
+                options: {
+                    sort: { 'createdAt': 1 }
+                }
+            }
+        });
 
-        const currentUser = await User.findOne({ _id: id });
 
-        if (currentUser) {
+
+        if (allPosts) {
             return res.status(201).json({
-                currentUser
+                all_posts: allPosts
             })
         }
         return res.status(401).send("User not found");
