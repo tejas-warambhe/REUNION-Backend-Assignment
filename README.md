@@ -22,6 +22,7 @@ JWT_SECRET=<SECRET_WORD>
 
 ## For Running tests
 First close the running server then,
+
     $ npm test 
     
  
