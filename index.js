@@ -7,8 +7,7 @@ const authentication = require('./routes/authentication');
 const user = require('./routes/user');
 const post = require('./routes/post');
 //Database Connection with mongoDB
-database.on('error', err => console.error(err));
-database.once('open', () => console.log("Connected to the database succesfully"));
+database();
 
 
 //middlewares
@@ -35,3 +34,5 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log("Listening on port: " + PORT);
 })
+
+module.exports = app;

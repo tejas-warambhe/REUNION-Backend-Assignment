@@ -35,7 +35,7 @@ router.post("/register", async(req, res) => {
         return res.json({ token });
 
     } catch (err) {
-        console.log(err.message);
+
         return res.status(500).send("server error");
     }
 });
@@ -44,6 +44,9 @@ router.post('/authenticate', async(req, res) => {
     try {
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(401).send("Email or Password Incorrect");
+        }
 
         const user = await User.findOne({ email: email })
             //check if user exists
@@ -52,18 +55,15 @@ router.post('/authenticate', async(req, res) => {
         }
         //check if password is same
         const validPassword = await bcryptjs.compare(password, user.password);
-
         if (!validPassword) {
             return res.status(401).send("Email or Password Incorrect");
         }
         //grant the token
 
         const token = jwtGenerator(user._id);
-        // console.log(token);
-
-        return res.json({ token });
 
 
+        return res.status(201).json({ token });
 
 
 

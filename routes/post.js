@@ -4,6 +4,7 @@ const authorize = require('../middlewares/authorisation');
 const User = require('../models/user');
 const Post = require('../models/post');
 const UserComment = require('../models/comment');
+const { default: mongoose } = require('mongoose');
 
 
 router.post('/posts', authorize, async(req, res) => {
@@ -41,12 +42,13 @@ router.delete('/posts/:id', authorize, async(req, res) => {
         const { id } = req.params;
 
         const currentUser = await User.findOne({ _id: req.user.id });
-        const hasPosted = currentUser.user_post.reduce((acc, cur) => {
-            return acc + (cur.toHexString() === id);
-        }, 0);
+        const hasPosted = 0;
+        currentUser.user_post.forEach((element) => {
+            hasPosted += (element.toHexString() === id);
+        });
 
 
-        if (hasPosted) {
+        if (hasPosted > 0) {
             const deletedPost = await Post.findByIdAndDelete({ _id: id });
             currentUser.user_post = currentUser.user_post.filter((element) => {
 
@@ -160,6 +162,11 @@ router.get('/posts/:id', async(req, res) => {
 router.get('/all_posts/:id', async(req, res) => {
     try {
         const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(401).send("Incorrect ID")
+        }
+
         const currentUser = await User.findOne({ _id: id });
 
         if (currentUser) {
